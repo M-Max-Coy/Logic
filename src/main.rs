@@ -1,6 +1,5 @@
 mod expression;
 mod wff;
-mod tree;
 mod symbol;
 mod sentence_symbol;
 mod logical_symbol;

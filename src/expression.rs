@@ -1,7 +1,3 @@
-use std::collections::VecDeque;
-
-use crate::wff::WFF;
-use crate::tree::TreeNode;
 use crate::symbol::Symbol;
 
 #[derive(Debug)]
