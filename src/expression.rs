@@ -2,18 +2,18 @@ use crate::symbol::Symbol;
 use crate::logical_symbol::LogicalSymbol;
 
 #[derive(Debug)]
-pub struct Expression {
-    expression: Vec<Symbol>,
+pub struct Expression<'a> {
+    expression: Vec<&'a Symbol>,
 }
 
-impl Expression {
+impl<'a> Expression<'a> {
     pub fn new() -> Self {
         Expression {
             expression: Vec::new(),
         }
     }
 
-    pub fn from_vec(input: Vec<Symbol>) -> Self {
+    pub fn from_vec(input: Vec<&'a Symbol>) -> Self {
         Expression {
             expression: input,
         }
@@ -23,7 +23,7 @@ impl Expression {
         Expression::is_wff_helper(&self.expression)
     }
 
-    fn is_wff_helper(cur: &[Symbol]) -> bool {
+    fn is_wff_helper(cur: &[&Symbol]) -> bool {
         // An empty expression is not a wff
         if cur.len() == 0 {
             return false;
@@ -88,7 +88,7 @@ impl Expression {
                                     }
 
                                     // Find index of where first parenthesis balanced expression happens
-                                    let mut j: usize = i+1;
+                                    let mut j: usize = i+2;
 
                                     while cur[i+1..j].iter().fold(0, |acc, x| acc + match x {
                                         Symbol::Logical(cur_symbol) => match cur_symbol {
@@ -138,5 +138,53 @@ impl Expression {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::sentence_symbol::SentenceSymbol;
+
+    use super::*;
+
+    #[test]
+    fn is_wff_test() {
+        let A1: Symbol = Symbol::Parameter(SentenceSymbol::new(String::from("A1"), None));
+        let A2: Symbol = Symbol::Parameter(SentenceSymbol::new(String::from("A2"), None));
+        let A3: Symbol = Symbol::Parameter(SentenceSymbol::new(String::from("A3"), None));
+        let A4: Symbol = Symbol::Parameter(SentenceSymbol::new(String::from("A4"), None));
+        let A5: Symbol = Symbol::Parameter(SentenceSymbol::new(String::from("A5"), None));
+        let lp: Symbol = Symbol::Logical(LogicalSymbol::LeftParenthesis);
+        let rp: Symbol = Symbol::Logical(LogicalSymbol::RightParenthesis);
+        let neg: Symbol = Symbol::Logical(LogicalSymbol::Neg);
+        let and: Symbol = Symbol::Logical(LogicalSymbol::And);
+        let or: Symbol = Symbol::Logical(LogicalSymbol::Or);
+        let implies: Symbol = Symbol::Logical(LogicalSymbol::Implies);
+        let iff: Symbol = Symbol::Logical(LogicalSymbol::IFF);
+
+        let exp1: Expression = Expression::new();
+        assert_eq!(exp1.is_wff(),false);
+
+        let exp2: Expression = Expression::from_vec(vec![&A1]);
+        assert_eq!(exp2.is_wff(),true);
+
+        let exp3: Expression = Expression::from_vec(vec![&lp,&neg,&A1,&rp]);
+        assert_eq!(exp3.is_wff(),true);
+
+        let exp4: Expression = Expression::from_vec(vec![&lp,&A1,&and,&A2,&rp]);
+        assert_eq!(exp4.is_wff(),true);
+
+        let exp5: Expression = Expression::from_vec(vec![&lp,&neg,&A1,&and,&A2,&rp]);
+        assert_eq!(exp5.is_wff(),false);
+
+        let exp6: Expression = Expression::from_vec(vec![&lp,&lp,&neg,&A1,&rp,&and,&A2,&rp]);
+        assert_eq!(exp6.is_wff(),true);
+
+        let exp7: Expression = Expression::from_vec(vec![&lp,&A1,&and,&lp,&neg,&A2,&rp,&rp]);
+        assert_eq!(exp7.is_wff(),true);
+
+        let exp8: Expression = Expression::from_vec(vec![&lp,&lp,&A1,&and,&A2,&rp,&implies,&lp,&lp,&neg,&A3,&rp,&or,&lp,&A4,&iff,&A3,&rp,&rp,&rp]);
+        assert_eq!(exp8.is_wff(),true);
+
     }
 }
